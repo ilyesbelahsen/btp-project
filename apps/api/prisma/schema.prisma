@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Company (tenant) ─────────────────────────────────────────────────────────
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  chantiers  Chantier[]
+  pointages  Pointage[]
+  depenses   Depense[]
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  PATRON
+  COMPTABLE
+  OUVRIER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         Role     @default(OUVRIER)
+  companyId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  pointages Pointage[]
+}
+
+// ─── Chantier ─────────────────────────────────────────────────────────────────
+
+enum ChantierStatus {
+  EN_COURS
+  TERMINE
+  EN_PAUSE
+  ANNULE
+}
+
+model Chantier {
+  id        String        @id @default(uuid())
+  name      String
+  address   String
+  status    ChantierStatus @default(EN_COURS)
+  budget    Float?
+  startDate DateTime
+  endDate   DateTime?
+  companyId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  pointages Pointage[]
+  depenses  Depense[]
+}
+
+// ─── Pointage ─────────────────────────────────────────────────────────────────
+
+enum PointageStatus {
+  EN_COURS
+  TERMINE
+  VALIDE
+}
+
+model Pointage {
+  id         String        @id @default(uuid())
+  userId     String
+  chantierId String
+  companyId  String
+  status     PointageStatus @default(EN_COURS)
+  startTime  DateTime
+  endTime    DateTime?
+  totalHours Float?
+  comment    String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  chantier Chantier @relation(fields: [chantierId], references: [id])
+  company  Company  @relation(fields: [companyId], references: [id])
+}
+
+// ─── Depense ──────────────────────────────────────────────────────────────────
+
+enum DepenseCategorie {
+  MATERIEL
+  MAIN_OEUVRE
+  TRANSPORT
+  AUTRE
+}
+
+model Depense {
+  id          String          @id @default(uuid())
+  chantierId  String
+  companyId   String
+  categorie   DepenseCategorie
+  montant     Float
+  description String
+  date        DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  chantier Chantier @relation(fields: [chantierId], references: [id])
+  company  Company  @relation(fields: [companyId], references: [id])
+}

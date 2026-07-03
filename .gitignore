@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+apps/api/dist/
+apps/desktop/dist-electron/
+apps/desktop/dist-renderer/
+apps/mobile/.expo/
+apps/mobile/dist/
+
+# Prisma generated client
+apps/api/src/generated/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Electron builder output
+apps/desktop/release/

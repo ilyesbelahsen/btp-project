@@ -1,0 +1,24 @@
+{
+  "name": "btp-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "dev:api": "pnpm --filter api run start:dev",
+    "dev:desktop": "pnpm --filter desktop run dev",
+    "dev:mobile": "pnpm --filter mobile run start",
+    "build": "pnpm -r run build",
+    "build:api": "pnpm --filter api run build",
+    "build:desktop": "pnpm --filter desktop run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "clean": "pnpm -r exec rm -rf node_modules dist .turbo"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.8.0",
+      "onFail": "download"
+    }
+  }
+}

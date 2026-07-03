@@ -1,0 +1,34 @@
+appId: com.btp.desktop
+productName: BTP Manager
+copyright: Copyright © 2026
+
+directories:
+  buildResources: public
+  output: release
+
+files:
+  - dist-electron
+  - dist-renderer
+  - "!node_modules"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: public/icon.ico
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  icon: public/icon.icns
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: public/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

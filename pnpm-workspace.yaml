@@ -1,5 +1,8 @@
 packages:
   - "apps/*"
+overrides:
+  react: "19.2.3"
+  react-dom: "19.2.3"
 allowBuilds:
   "@prisma/engines": true
   "@scarf/scarf": false
@@ -24,3 +27,5 @@ minimumReleaseAgeExclude:
   - expo-modules-autolinking@57.0.4
   - expo-modules-core@57.0.2
   - expo@57.0.2
+  - "@expo/ui@57.0.3"
+  - expo-router@57.0.3

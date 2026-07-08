@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { Platform } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AuthUser {
@@ -19,6 +21,17 @@ interface AuthState {
   clearAuth: () => void;
 }
 
+// SecureStore n'est disponible que sur iOS/Android — fallback AsyncStorage sur Web
+const storage =
+  Platform.OS === "web"
+    ? createJSONStorage(() => AsyncStorage)
+    : createJSONStorage(() => ({
+        getItem: (key: string) => SecureStore.getItemAsync(key),
+        setItem: (key: string, value: string) =>
+          SecureStore.setItemAsync(key, value),
+        removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+      }));
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -32,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "btp-auth",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage,
     },
   ),
 );

@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ChantierModule } from './modules/chantier/chantier.module';
 import { PointageModule } from './modules/pointage/pointage.module';
 import { DepenseModule } from './modules/depense/depense.module';
+import { SeedModule } from './modules/seed/seed.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DepenseModule } from './modules/depense/depense.module';
     ChantierModule,
     PointageModule,
     DepenseModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

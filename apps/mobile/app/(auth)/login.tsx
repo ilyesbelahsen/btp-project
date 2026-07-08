@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginScreen() {
   const setAuth = useAuthStore((s) => s.setAuth);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     control,
@@ -28,17 +30,29 @@ export default function LoginScreen() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (data: FormData) => {
-    const response = await authApi.login(data.email, data.password);
-    setAuth(response.data.user, response.data.accessToken);
-    router.replace("/(tabs)");
+    setServerError(null);
+    try {
+      const response = await authApi.login(data.email, data.password);
+      setAuth(response.data.user, response.data.accessToken);
+      router.replace("/(tabs)");
+    } catch {
+      setServerError("Email ou mot de passe incorrect");
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>BTP Manager</Text>
+
+      {serverError && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorBoxText}>{serverError}</Text>
+        </View>
+      )}
 
       <Controller
         control={control}
@@ -108,6 +122,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   error: { color: "red", fontSize: 12, marginBottom: 8 },
+  errorBox: {
+    backgroundColor: "#fee2e2",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBoxText: { color: "#dc2626", fontSize: 14, textAlign: "center" },
   button: {
     backgroundColor: "#2563eb",
     borderRadius: 8,

@@ -37,7 +37,8 @@ export default function LoginScreen() {
     setServerError(null);
     try {
       const response = await authApi.login(data.email, data.password);
-      setAuth(response.data.user, response.data.accessToken);
+      const { user, accessToken, refreshToken } = response.data;
+      setAuth(user, accessToken, refreshToken);
       router.replace("/(tabs)");
     } catch {
       setServerError("Email ou mot de passe incorrect");

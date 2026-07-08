@@ -22,5 +22,6 @@ export const authApi = {
   refresh: (refreshToken: string) =>
     apiClient.post<AuthResponse>("/auth/refresh", { refreshToken }),
 
-  logout: () => apiClient.post("/auth/logout"),
+  logout: (refreshToken: string) =>
+    apiClient.post("/auth/logout", { refreshToken }),
 };

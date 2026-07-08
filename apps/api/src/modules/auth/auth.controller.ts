@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('auth')
@@ -30,5 +31,15 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Refresh token invalide ou expiré' })
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Déconnexion — invalide le refresh token côté serveur',
+  })
+  @ApiResponse({ status: 204, description: 'Déconnexion réussie' })
+  async logout(@Body() dto: LogoutDto) {
+    await this.authService.logout(dto);
   }
 }

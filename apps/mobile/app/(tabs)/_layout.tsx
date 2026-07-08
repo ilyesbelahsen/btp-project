@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Briefcase, Clock, Receipt } from "lucide-react-native";
+import { Briefcase, Clock, Receipt, UserCircle } from "lucide-react-native";
 
 export default function TabsLayout() {
   return (
@@ -23,6 +23,13 @@ export default function TabsLayout() {
         options={{
           title: "Dépenses",
           tabBarIcon: ({ color }) => <Receipt size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: "Profil",
+          tabBarIcon: ({ color }) => <UserCircle size={22} color={color} />,
         }}
       />
     </Tabs>

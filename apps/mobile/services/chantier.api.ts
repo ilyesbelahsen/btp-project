@@ -10,6 +10,6 @@ interface Chantier {
 }
 
 export const chantierApi = {
-  findAll: () => apiClient.get<Chantier[]>("/chantiers"),
+  findMyChantiers: () => apiClient.get<Chantier[]>("/chantiers/mes-chantiers"),
   findOne: (id: string) => apiClient.get<Chantier>(`/chantiers/${id}`),
 };

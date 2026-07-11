@@ -1,16 +1,9 @@
 import { Tabs } from "expo-router";
-import { Briefcase, Clock, Receipt, UserCircle } from "lucide-react-native";
+import { Clock, History, UserCircle } from "lucide-react-native";
 
 export default function TabsLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "#2563eb" }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Chantiers",
-          tabBarIcon: ({ color }) => <Briefcase size={22} color={color} />,
-        }}
-      />
       <Tabs.Screen
         name="pointage"
         options={{
@@ -19,10 +12,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="depenses"
+        name="historique"
         options={{
-          title: "Dépenses",
-          tabBarIcon: ({ color }) => <Receipt size={22} color={color} />,
+          title: "Historique",
+          tabBarIcon: ({ color }) => <History size={22} color={color} />,
         }}
       />
       <Tabs.Screen

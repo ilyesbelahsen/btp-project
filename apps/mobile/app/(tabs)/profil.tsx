@@ -1,146 +1,48 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-import { router } from "expo-router";
-import { LogOut, User } from "lucide-react-native";
-
-import { useAuthStore } from "@/store/auth.store";
-import { authApi } from "@/services/auth.api";
+import { View, Text, ActivityIndicator } from 'react-native';
+import { User, LogOut } from 'lucide-react-native';
+import { useAuthStore } from '@/src/stores/auth.store';
+import { useLogout } from '@/src/hooks/useAuth';
+import { Button } from '@/src/components/ui/Button';
+import { Badge } from '@/src/components/ui/Badge';
+import { COLORS } from '@/src/constants/theme';
 
 export default function ProfilScreen() {
-  const { user, refreshToken, clearAuth } = useAuthStore();
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const confirmLogout = async () => {
-    setIsLoading(true);
-
-    // Déconnexion côté serveur (sans bloquer l'UI)
-    if (refreshToken) {
-      authApi.logout(refreshToken).catch(() => {});
-    }
-
-    clearAuth();
-    router.replace("/(auth)/login");
-  };
+  const user = useAuthStore((s) => s.user);
+  const logoutMutation = useLogout();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.avatar}>
-          <User size={40} color="#2563eb" />
+    <View className="flex-1 bg-gray-100 p-6 justify-between">
+      <View className="bg-white rounded-2xl p-8 items-center shadow-sm">
+        <View className="w-20 h-20 rounded-full bg-primary-light justify-center items-center mb-4">
+          <User size={40} color={COLORS.primary} />
         </View>
 
-        <Text style={styles.name}>
+        <Text className="text-xl font-bold text-gray-900 mb-1">
           {user?.firstName} {user?.lastName}
         </Text>
 
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text className="text-sm text-gray-400 mb-4">{user?.email}</Text>
 
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{user?.role}</Text>
-        </View>
+        {user?.role ? (
+          <Badge label={user.role} color={COLORS.primary} backgroundColor={COLORS.primaryLight} />
+        ) : null}
       </View>
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={confirmLogout}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <>
-            <LogOut size={18} color="#fff" />
-            <Text style={styles.logoutText}>Se déconnecter</Text>
-          </>
-        )}
-      </TouchableOpacity>
+      <Button
+        label="Se déconnecter"
+        variant="danger"
+        icon={
+          logoutMutation.isPending ? (
+            <ActivityIndicator color="#fff" style={{ marginRight: 6 }} />
+          ) : (
+            <LogOut size={18} color="#fff" style={{ marginRight: 6 }} />
+          )
+        }
+        onPress={() => logoutMutation.mutate()}
+        loading={logoutMutation.isPending}
+        className="self-center"
+        accessibilityLabel="Se déconnecter"
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f1f5f9",
-    padding: 24,
-    justifyContent: "space-between",
-  },
-
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 32,
-    alignItems: "center",
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#eff6ff",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  name: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 6,
-  },
-
-  email: {
-    fontSize: 15,
-    color: "#64748b",
-    marginBottom: 18,
-  },
-
-  badge: {
-    backgroundColor: "#dbeafe",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-
-  badgeText: {
-    color: "#2563eb",
-    fontWeight: "700",
-    fontSize: 13,
-    textTransform: "capitalize",
-  },
-
-  logoutButton: {
-    alignSelf: "center",
-    backgroundColor: "#ef4444",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-
-  logoutText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-});

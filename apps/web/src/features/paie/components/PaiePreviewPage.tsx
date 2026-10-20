@@ -48,10 +48,23 @@ export function PaiePreviewPage() {
           (sum, detail) => sum + detail.heuresValidees * detail.tauxMajoration,
           0,
         ),
+        coutHeuresNormales: details.reduce(
+          (sum, detail) => sum + detail.coutHeuresNormales,
+          0,
+        ),
+        coutMajoration: details.reduce(
+          (sum, detail) => sum + detail.coutMajoration,
+          0,
+        ),
         coutMainOeuvreMajore: details.reduce(
           (sum, detail) => sum + detail.coutMainOeuvreMajore,
           0,
         ),
+        coutTotal:
+          details.reduce(
+            (sum, detail) => sum + detail.coutMainOeuvreMajore,
+            0,
+          ) + row.montantIndemnites,
         details,
         chantiers: [...new Set(details.map((detail) => detail.chantier))],
       };
@@ -135,11 +148,11 @@ export function PaiePreviewPage() {
             <thead className="bg-stone-100 text-xs font-semibold uppercase tracking-wider text-stone-500">
               <tr>
                 <th className="px-4 py-3 text-left">Ouvrier</th>
-                <th className="px-4 py-3 text-right">Heures travaillées</th>
-                <th className="px-4 py-3 text-right">Coût MO majoré</th>
+                <th className="px-4 py-3 text-right">Heures total travaillées</th>
                 <th className="px-4 py-3 text-right">Heures majorées</th>
+                <th className="px-4 py-3 text-right">Coût majoré</th>
                 <th className="px-4 py-3 text-right">Indemnités</th>
-                <th className="px-4 py-3 text-left">Chantiers</th>
+                <th className="px-4 py-3 text-right">Coût total</th>
               </tr>
             </thead>
             <tbody>
@@ -195,14 +208,6 @@ export function PaiePreviewPage() {
                     )}
                   </td>
                   <td className="px-4 py-2 text-right">
-                    {formatMoney(
-                      filteredList.reduce(
-                        (sum, row) => sum + row.coutMainOeuvreMajore,
-                        0,
-                      ),
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-right">
                     {formatDurationMinutes(
                       Math.round(
                         filteredList.reduce(
@@ -213,12 +218,20 @@ export function PaiePreviewPage() {
                     )}
                   </td>
                   <td className="px-4 py-2 text-right">
-                    {filteredList.reduce(
-                      (sum, row) => sum + row.nombreIndemnites,
-                      0,
+                    {formatMoney(
+                      filteredList.reduce((sum, row) => sum + row.coutMajoration, 0),
                     )}
                   </td>
-                  <td />
+                  <td className="px-4 py-2 text-right">
+                    {formatMoney(
+                      filteredList.reduce((sum, row) => sum + row.montantIndemnites, 0),
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    {formatMoney(
+                      filteredList.reduce((sum, row) => sum + row.coutTotal, 0),
+                    )}
+                  </td>
                 </tr>
               </tfoot>
             )}

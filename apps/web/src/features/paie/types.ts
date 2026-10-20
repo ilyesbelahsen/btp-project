@@ -17,7 +17,10 @@ export type PaiePreviewRow = {
   tauxHoraire: number | null;
   totalHeuresTravaillees: number;
   heuresMajorees: number;
+  coutHeuresNormales: number;
+  coutMajoration: number;
   coutMainOeuvreMajore: number;
+  coutTotal: number;
   details: PaiePreviewDetail[];
   nombreIndemnites: number;
   montantIndemnites: number;
@@ -36,6 +39,8 @@ export type PaiePreviewDetail = {
   tauxHoraire: number | null;
   tauxMajoration: number;
   heuresValidees: number;
+  coutHeuresNormales: number;
+  coutMajoration: number;
   coutMainOeuvreMajore: number;
 };
 

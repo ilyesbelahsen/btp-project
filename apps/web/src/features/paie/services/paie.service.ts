@@ -33,7 +33,10 @@ const PaiePreviewRowSchema = z.object({
   tauxHoraire: z.number().nullable(),
   totalHeuresTravaillees: z.number(),
   heuresMajorees: z.number(),
+  coutHeuresNormales: z.number(),
+  coutMajoration: z.number(),
   coutMainOeuvreMajore: z.number(),
+  coutTotal: z.number(),
   details: z.array(
     z.object({
       chantier: z.string(),
@@ -41,6 +44,8 @@ const PaiePreviewRowSchema = z.object({
       tauxHoraire: z.number().nullable(),
       tauxMajoration: z.number().nonnegative(),
       heuresValidees: z.number(),
+      coutHeuresNormales: z.number(),
+      coutMajoration: z.number(),
       coutMainOeuvreMajore: z.number(),
     }),
   ),

@@ -11,6 +11,7 @@ import {
   Users,
   Clock,
   Euro,
+  TrendingUp,
   Settings2,
   Menu,
   X,
@@ -27,6 +28,12 @@ const NAV_ITEMS = [
     href: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
+    roles: ["ADMIN", "PATRON", "COMPTABLE"],
+  },
+  {
+    href: "/dashboard/reporting",
+    label: "Reporting",
+    icon: TrendingUp,
     roles: ["ADMIN", "PATRON", "COMPTABLE"],
   },
   {

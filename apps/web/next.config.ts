@@ -8,8 +8,23 @@ const withPWA = require("next-pwa")({
   port: process.env.PORT || 3001,
 });
 
+const apiOrigin = process.env.API_ORIGIN;
+
+if (!apiOrigin) {
+  throw new Error("API_ORIGIN must be defined");
+}
+
 const nextConfig: NextConfig = {
   transpilePackages: ["@chantier/types", "@chantier/validators"],
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiOrigin}/api/:path*`,
+      },
+    ];
+  },
 
   // Silence Turbopack warning — next-pwa injects webpack config but PWA is disabled in dev
   turbopack: {},

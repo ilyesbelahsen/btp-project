@@ -1,8 +1,14 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth.store";
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+if (!apiBaseUrl) {
+  throw new Error("NEXT_PUBLIC_API_URL must be defined");
+}
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api",
+  baseURL: apiBaseUrl,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });

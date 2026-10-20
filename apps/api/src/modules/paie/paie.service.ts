@@ -21,7 +21,10 @@ export type PaiePreviewRow = {
   tauxHoraire: number | null;
   totalHeuresTravaillees: number;
   heuresMajorees: number;
+  coutHeuresNormales: number;
+  coutMajoration: number;
   coutMainOeuvreMajore: number;
+  coutTotal: number;
   details: PaiePreviewDetail[];
   nombreIndemnites: number;
   montantIndemnites: number;
@@ -48,6 +51,8 @@ export type PaiePreviewDetail = {
   tauxHoraire: number | null;
   tauxMajoration: number;
   heuresValidees: number;
+  coutHeuresNormales: number;
+  coutMajoration: number;
   coutMainOeuvreMajore: number;
 };
 
@@ -144,6 +149,8 @@ export class PaieService {
       tauxHoraire: number | null;
       totalHeuresTravaillees: number;
       heuresMajorees: number;
+      coutHeuresNormales: number;
+      coutMajoration: number;
       coutMainOeuvreMajore: number;
       details: Map<string, PaiePreviewDetail>;
       chantiersSet: Set<string>;
@@ -163,6 +170,8 @@ export class PaieService {
           tauxHoraire: pointage.user.tauxHoraire,
           totalHeuresTravaillees: 0,
           heuresMajorees: 0,
+          coutHeuresNormales: 0,
+          coutMajoration: 0,
           coutMainOeuvreMajore: 0,
           details: new Map(),
           chantiersSet: new Set(),
@@ -177,6 +186,8 @@ export class PaieService {
       const taux = resolveZoneMajoration(zone, pointage.startTime, majorations);
       const coutMainOeuvreMajore =
         heures * (pointage.user.tauxHoraire ?? 0) * (1 + taux);
+      const coutHeuresNormales = heures * (pointage.user.tauxHoraire ?? 0);
+      const coutMajoration = coutHeuresNormales * taux;
       const detailKey = `${pointage.chantier.name}:${zone}`;
       const detail = entry.details.get(detailKey) ?? {
         chantier: pointage.chantier.name,
@@ -184,13 +195,19 @@ export class PaieService {
         tauxHoraire: pointage.user.tauxHoraire,
         tauxMajoration: taux,
         heuresValidees: 0,
+        coutHeuresNormales: 0,
+        coutMajoration: 0,
         coutMainOeuvreMajore: 0,
       };
 
       entry.totalHeuresTravaillees += heures;
       entry.heuresMajorees += heures * taux;
+      entry.coutHeuresNormales += coutHeuresNormales;
+      entry.coutMajoration += coutMajoration;
       entry.coutMainOeuvreMajore += coutMainOeuvreMajore;
       detail.heuresValidees += heures;
+      detail.coutHeuresNormales += coutHeuresNormales;
+      detail.coutMajoration += coutMajoration;
       detail.coutMainOeuvreMajore += coutMainOeuvreMajore;
       entry.details.set(detailKey, detail);
       entry.chantiersSet.add(pointage.chantier.name);
@@ -207,10 +224,22 @@ export class PaieService {
       tauxHoraire: entry.tauxHoraire,
       totalHeuresTravaillees: roundMoney(entry.totalHeuresTravaillees),
       heuresMajorees: roundMoney(entry.heuresMajorees),
+      coutHeuresNormales: roundMoney(entry.coutHeuresNormales),
+      coutMajoration: roundMoney(entry.coutMajoration),
       coutMainOeuvreMajore: roundMoney(entry.coutMainOeuvreMajore),
+      coutTotal: roundMoney(
+        entry.coutMainOeuvreMajore +
+          entry.indemnites.reduce(
+            (sum, indemnite) =>
+              sum + (indemnite.montant ?? 0) * indemnite.quantite,
+            0,
+          ),
+      ),
       details: [...entry.details.values()].map((detail) => ({
         ...detail,
         heuresValidees: roundMoney(detail.heuresValidees),
+        coutHeuresNormales: roundMoney(detail.coutHeuresNormales),
+        coutMajoration: roundMoney(detail.coutMajoration),
         coutMainOeuvreMajore: roundMoney(detail.coutMainOeuvreMajore),
       })),
       nombreIndemnites:

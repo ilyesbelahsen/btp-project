@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DEPENSE_CATEGORIE_RULES } from '../depense/depense-categories.constants';
 import {
@@ -7,6 +11,8 @@ import {
   roundMoney,
 } from '../../common/precision';
 import { resolveZoneMajoration } from '../zone/zone.service';
+import { RapportPeriodeQueryDto } from './dto/rapport-periode-query.dto';
+import { UpdateTresorerieDto } from './dto/update-tresorerie.dto';
 
 export type DashboardStats = {
   chantiersActifs: number;
@@ -84,6 +90,40 @@ export type SuiviTache = {
   suiviMateriaux: SuiviBudgetaire;
 };
 
+export type ReportingGlobal = {
+  dateFrom: string;
+  dateTo: string;
+  chantierId: string | null;
+  capitalInitial: number;
+  totalEntrees: number;
+  totalSorties: number;
+  soldeNet: number;
+  tresorerieFinale: number;
+  coutMainOeuvre: number;
+  coutSousTraitance: number;
+  coutMateriaux: number;
+  coutAutres: number;
+  coutTotal: number;
+  serie: Array<{
+    date: string;
+    entrees: number;
+    sorties: number;
+    soldeCumule: number;
+  }>;
+  chantiers: Array<{
+    id: string;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    coutMainOeuvre: number;
+    coutSousTraitance: number;
+    coutMateriaux: number;
+    coutAutres: number;
+    coutTotal: number;
+  }>;
+};
+
 @Injectable()
 export class RapportService {
   constructor(private readonly prisma: PrismaService) {}
@@ -150,6 +190,168 @@ export class RapportService {
       depensesTotales: roundMoney(depensesTotales),
       coutMainOeuvre: roundMoney(coutMainOeuvre),
       coutTotal: roundMoney(depensesTotales + coutMainOeuvre),
+    };
+  }
+
+  private periodeRapport(dto: RapportPeriodeQueryDto) {
+    const dateFrom = new Date(`${dto.dateFrom}T00:00:00.000Z`);
+    const dateTo = new Date(`${dto.dateTo}T23:59:59.999Z`);
+    if (dateFrom > dateTo) {
+      throw new BadRequestException(
+        'La date de début doit être antérieure à la date de fin',
+      );
+    }
+    return { dateFrom, dateTo };
+  }
+
+  private dateKey(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
+
+  async updateTresorerie(
+    companyId: string,
+    dto: UpdateTresorerieDto,
+  ) {
+    return this.prisma.tresorerieConfiguration.upsert({
+      where: { companyId },
+      create: { companyId, capitalInitial: dto.capitalInitial },
+      update: { capitalInitial: dto.capitalInitial },
+      select: { capitalInitial: true, updatedAt: true },
+    });
+  }
+
+  async getReportingGlobal(
+    companyId: string,
+    dto: RapportPeriodeQueryDto,
+  ): Promise<ReportingGlobal> {
+    const { dateFrom, dateTo } = this.periodeRapport(dto);
+    const chantierWhere = {
+      companyId,
+      ...(dto.chantierId ? { id: dto.chantierId } : {}),
+      startDate: { lte: dateTo },
+      OR: [{ endDate: null }, { endDate: { gte: dateFrom } }],
+    };
+    const [configuration, chantiers] = await Promise.all([
+      this.prisma.tresorerieConfiguration.findUnique({
+        where: { companyId },
+        select: { capitalInitial: true },
+      }),
+      this.prisma.chantier.findMany({
+        where: chantierWhere,
+        include: {
+          depenses: {
+            where: {
+              statutControle: 'ACCEPTEE',
+              date: { gte: dateFrom, lte: dateTo },
+            },
+            select: { montant: true, categorie: true, date: true },
+          },
+          pointages: {
+            where: {
+              status: 'VALIDE',
+              startTime: { gte: dateFrom, lte: dateTo },
+            },
+            select: {
+              totalMinutes: true,
+              totalHours: true,
+              startTime: true,
+              user: { select: { tauxHoraire: true } },
+            },
+          },
+        },
+        orderBy: { startDate: 'asc' },
+      }),
+    ]);
+    const capitalInitial = roundMoney(configuration?.capitalInitial ?? 0);
+    const daily = new Map<string, { entrees: number; sorties: number }>();
+    const currentDate = new Date(dateFrom);
+    while (currentDate <= dateTo) {
+      daily.set(this.dateKey(currentDate), { entrees: 0, sorties: 0 });
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+    daily.get(this.dateKey(dateFrom))!.entrees = capitalInitial;
+
+    let coutMainOeuvre = 0;
+    let coutSousTraitance = 0;
+    let coutMateriaux = 0;
+    let coutAutres = 0;
+    const chantierRows = chantiers.map((chantier) => {
+      const row = {
+        id: chantier.id,
+        name: chantier.name,
+        status: chantier.status,
+        startDate: chantier.startDate.toISOString(),
+        endDate: chantier.endDate?.toISOString() ?? null,
+        coutMainOeuvre: 0,
+        coutSousTraitance: 0,
+        coutMateriaux: 0,
+        coutAutres: 0,
+        coutTotal: 0,
+      };
+      for (const pointage of chantier.pointages) {
+        const cout = durationHours(pointage) * (pointage.user.tauxHoraire ?? 0);
+        row.coutMainOeuvre += cout;
+        coutMainOeuvre += cout;
+        daily.get(this.dateKey(pointage.startTime))!.sorties += cout;
+      }
+      for (const depense of chantier.depenses) {
+        const montant = depense.montant;
+        if (depense.categorie === 'SOUS_TRAITANCE') {
+          row.coutSousTraitance += montant;
+          coutSousTraitance += montant;
+        } else if (depense.categorie === 'MATERIEL') {
+          row.coutMateriaux += montant;
+          coutMateriaux += montant;
+        } else {
+          row.coutAutres += montant;
+          coutAutres += montant;
+        }
+        daily.get(this.dateKey(depense.date))!.sorties += montant;
+      }
+      row.coutTotal =
+        row.coutMainOeuvre +
+        row.coutSousTraitance +
+        row.coutMateriaux +
+        row.coutAutres;
+      return {
+        ...row,
+        coutMainOeuvre: roundMoney(row.coutMainOeuvre),
+        coutSousTraitance: roundMoney(row.coutSousTraitance),
+        coutMateriaux: roundMoney(row.coutMateriaux),
+        coutAutres: roundMoney(row.coutAutres),
+        coutTotal: roundMoney(row.coutTotal),
+      };
+    });
+    const totalSorties = roundMoney(
+      coutMainOeuvre + coutSousTraitance + coutMateriaux + coutAutres,
+    );
+    let soldeCumule = 0;
+    const serie = [...daily.entries()].map(([date, values]) => {
+      soldeCumule += values.entrees - values.sorties;
+      return {
+        date,
+        entrees: roundMoney(values.entrees),
+        sorties: roundMoney(values.sorties),
+        soldeCumule: roundMoney(soldeCumule),
+      };
+    });
+    const totalEntrees = roundMoney(serie.reduce((sum, day) => sum + day.entrees, 0));
+    return {
+      dateFrom: dto.dateFrom,
+      dateTo: dto.dateTo,
+      chantierId: dto.chantierId ?? null,
+      capitalInitial,
+      totalEntrees,
+      totalSorties,
+      soldeNet: roundMoney(totalEntrees - totalSorties),
+      tresorerieFinale: roundMoney(totalEntrees - totalSorties),
+      coutMainOeuvre: roundMoney(coutMainOeuvre),
+      coutSousTraitance: roundMoney(coutSousTraitance),
+      coutMateriaux: roundMoney(coutMateriaux),
+      coutAutres: roundMoney(coutAutres),
+      coutTotal: totalSorties,
+      serie,
+      chantiers: chantierRows,
     };
   }
 

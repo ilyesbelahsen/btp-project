@@ -1,10 +1,12 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RapportService } from './rapport.service';
+import { RapportPeriodeQueryDto } from './dto/rapport-periode-query.dto';
+import { UpdateTresorerieDto } from './dto/update-tresorerie.dto';
 
 @ApiTags('rapport')
 @ApiBearerAuth()
@@ -18,6 +20,26 @@ export class RapportController {
   @ApiOperation({ summary: 'KPIs globaux du dashboard patron' })
   getDashboardStats(@CurrentUser() user: { companyId: string }) {
     return this.rapportService.getDashboardStats(user.companyId);
+  }
+
+  @Get('global')
+  @Roles('ADMIN', 'PATRON', 'COMPTABLE')
+  @ApiOperation({ summary: 'Reporting financier global sur une période' })
+  getReportingGlobal(
+    @Query() query: RapportPeriodeQueryDto,
+    @CurrentUser() user: { companyId: string },
+  ) {
+    return this.rapportService.getReportingGlobal(user.companyId, query);
+  }
+
+  @Patch('tresorerie')
+  @Roles('ADMIN', 'PATRON')
+  @ApiOperation({ summary: 'Met à jour le capital initial de trésorerie' })
+  updateTresorerie(
+    @Body() dto: UpdateTresorerieDto,
+    @CurrentUser() user: { companyId: string },
+  ) {
+    return this.rapportService.updateTresorerie(user.companyId, dto);
   }
 
   @Get('chantiers-synthese')

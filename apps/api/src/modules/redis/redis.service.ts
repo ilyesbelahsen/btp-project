@@ -18,4 +18,13 @@ export class RedisService {
     const count = await this.redis.exists(key);
     return count > 0;
   }
+
+  async setIfAbsent(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const result = await this.redis.set(key, value, 'EX', ttlSeconds, 'NX');
+    return result === 'OK';
+  }
 }

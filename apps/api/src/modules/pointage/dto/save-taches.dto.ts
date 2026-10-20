@@ -1,11 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsIn, ArrayMaxSize } from 'class-validator';
-import { TACHE_TYPES, TacheType } from '../tache-types.constants';
+import { ArrayMaxSize, IsArray, IsUUID } from 'class-validator';
 
 export class SaveTachesDto {
-  @ApiProperty({ example: ['COFFRAGE', 'BETON'], isArray: true })
+  @ApiProperty({ example: ['task-uuid-1', 'task-uuid-2'], isArray: true })
   @IsArray()
-  @IsIn(TACHE_TYPES, { each: true })
-  @ArrayMaxSize(TACHE_TYPES.length)
-  taches: TacheType[];
+  @IsUUID('4', { each: true })
+  @ArrayMaxSize(100)
+  taches: string[];
 }

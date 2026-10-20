@@ -1,0 +1,1 @@
+Surtout, les heures de main-d'œuvre interne ne sont pas rattachées à une tâche : le suivi « main-d'œuvre par tâche » ne reflète donc actuellement que la sous-traitance

@@ -3,7 +3,21 @@ import { Clock, History, UserCircle } from "lucide-react-native";
 
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "#2563eb" }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#ea580c",
+        tabBarInactiveTintColor: "#a8a29e",
+        tabBarStyle: {
+          backgroundColor: "#1c1917",
+          borderTopColor: "#292524",
+          borderTopWidth: 1,
+          paddingBottom: 10,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+        headerShown: false,
+      }}
+    >
       <Tabs.Screen
         name="pointage"
         options={{

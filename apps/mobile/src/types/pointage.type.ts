@@ -1,4 +1,10 @@
-export const POINTAGE_STATUSES = ["EN_COURS", "TERMINE", "VALIDE"] as const;
+export const POINTAGE_STATUSES = [
+  "EN_COURS",
+  "TERMINE",
+  "SOUMIS",
+  "REJETE",
+  "VALIDE",
+] as const;
 export type PointageStatus = (typeof POINTAGE_STATUSES)[number];
 
 export type Pointage = {
@@ -7,10 +13,12 @@ export type Pointage = {
   chantierId: string;
   status: PointageStatus;
   startTime: string;
-  endTime?: string;
+  endTime?: string | null;
+  totalMinutes?: number | null;
   totalHours?: number | null;
   taches?: string[];
-  comment?: string;
+  comment?: string | null;
+  rejectionReason?: string | null;
   chantier?: { id: string; name: string };
 };
 
@@ -29,7 +37,7 @@ export type PointageStats = {
   mois: string;
 };
 
-export type CompletedPointage = {
-  chantierName: string;
-  totalHours: number;
+export type RepartitionTache = {
+  tacheId: string;
+  minutes: number;
 };

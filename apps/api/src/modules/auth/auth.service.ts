@@ -40,13 +40,7 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshTokenDto) {
-    const blacklistKey = this.blacklistKey(dto.refreshToken);
-    const isRevoked = await this.redisService.exists(blacklistKey);
-    if (isRevoked) {
-      throw new UnauthorizedException('Refresh token révoqué');
-    }
-
-    let payload: { sub: string };
+    let payload: { sub: string; exp?: number };
     try {
       payload = this.jwtService.verify(dto.refreshToken, {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
@@ -60,16 +54,23 @@ export class AuthService {
       throw new UnauthorizedException('Utilisateur introuvable');
     }
 
+    const ttl = (payload.exp ?? 0) - Math.floor(Date.now() / 1000);
+    const wasRevoked = await this.redisService.setIfAbsent(
+      this.blacklistKey(dto.refreshToken),
+      '1',
+      ttl,
+    );
+    if (!wasRevoked) {
+      throw new UnauthorizedException('Refresh token révoqué');
+    }
+
     return this.generateTokens(user);
   }
 
   async logout(dto: LogoutDto): Promise<void> {
     let payload: { sub: string; exp?: number };
     try {
-      payload = this.jwtService.decode(dto.refreshToken) as {
-        sub: string;
-        exp?: number;
-      };
+      payload = this.jwtService.decode(dto.refreshToken);
     } catch {
       return; // Token malformé, rien à invalider
     }
@@ -100,9 +101,29 @@ export class AuthService {
       },
     );
 
+    const decodedAccessToken = this.jwtService.decode(accessToken);
+    if (
+      typeof decodedAccessToken !== 'object' ||
+      decodedAccessToken === null ||
+      typeof decodedAccessToken.exp !== 'number'
+    ) {
+      throw new Error('Access token expiration is missing');
+    }
+
+    const decodedRefreshToken = this.jwtService.decode(refreshToken);
+    if (
+      typeof decodedRefreshToken !== 'object' ||
+      decodedRefreshToken === null ||
+      typeof decodedRefreshToken.exp !== 'number'
+    ) {
+      throw new Error('Refresh token expiration is missing');
+    }
+
     return {
       accessToken,
       refreshToken,
+      accessTokenExpiresAt: decodedAccessToken.exp,
+      refreshTokenExpiresAt: decodedRefreshToken.exp,
       user: {
         id: user.id,
         email: user.email,

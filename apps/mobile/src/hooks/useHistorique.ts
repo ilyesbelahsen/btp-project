@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import { queryKeys } from "@/src/constants/query-keys";
 import { pointageService } from "@/src/services/pointage.service";
 import { currentMois, shiftMois } from "@/src/utils/date.utils";
@@ -18,7 +19,11 @@ export function useHistorique() {
   const handlePreviousMois = () => handleSetMois(shiftMois(moisFilter, -1));
   const handleNextMois = () => handleSetMois(shiftMois(moisFilter, 1));
 
-  const { data: stats, isLoading: loadingStats } = useQuery({
+  const {
+    data: stats,
+    isLoading: loadingStats,
+    refetch: refetchStats,
+  } = useQuery({
     queryKey: queryKeys.mesStats(moisFilter),
     queryFn: () => pointageService.getMesStats(moisFilter),
   });
@@ -27,6 +32,7 @@ export function useHistorique() {
     data: historiquePage,
     isLoading,
     isFetching,
+    refetch: refetchHistorique,
   } = useQuery({
     queryKey: queryKeys.historique(page, moisFilter),
     queryFn: () =>
@@ -36,6 +42,13 @@ export function useHistorique() {
         mois: moisFilter,
       }),
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchStats();
+      refetchHistorique();
+    }, [refetchStats, refetchHistorique]),
+  );
 
   const totalPages = historiquePage?.totalPages ?? 1;
 

@@ -15,16 +15,20 @@ export function formatTime(iso: string): string {
 }
 
 export function formatDuration(hours?: number | null): string {
-  if (!hours) return "—";
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  return m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}`;
+  return formatDurationMinutes(hours == null ? null : Math.round(hours * 60));
 }
 
 export function formatDurationLabel(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  return m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
+  return formatDurationMinutes(Math.round(hours * 60));
+}
+
+export function formatDurationMinutes(minutes: number | null): string {
+  if (minutes == null) return "—";
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours === 0) return `${remainingMinutes} min`;
+  if (remainingMinutes === 0) return `${hours} h`;
+  return `${hours} h ${String(remainingMinutes).padStart(2, "0")}`;
 }
 
 export function currentMois(): string {
@@ -49,6 +53,11 @@ export function moisLabel(mois: string): string {
 export function elapsedDurationLabel(startTimeIso: string): string {
   const now = new Date();
   const start = new Date(startTimeIso);
-  const elapsedH = (now.getTime() - start.getTime()) / 3_600_000;
-  return formatDurationLabel(elapsedH);
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor((now.getTime() - start.getTime()) / 1_000),
+  );
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }

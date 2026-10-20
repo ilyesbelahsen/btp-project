@@ -2,7 +2,11 @@ import { View, Text } from "react-native";
 import { Clock } from "lucide-react-native";
 import type { Pointage } from "@/src/types/pointage.type";
 import { STATUS_CONFIG } from "@/src/constants/theme";
-import { formatDate, formatTime, formatDuration } from "@/src/utils/date.utils";
+import {
+  formatDate,
+  formatTime,
+  formatDurationMinutes,
+} from "@/src/utils/date.utils";
 
 type PointageHistoriqueItemProps = {
   pointage: Pointage;
@@ -43,6 +47,17 @@ export function PointageHistoriqueItem({
         </Text>
       ) : null}
 
+      {pointage.status === "REJETE" && pointage.rejectionReason ? (
+        <View className="rounded-lg bg-red-50 px-3 py-2 mb-2">
+          <Text className="text-xs font-semibold text-red-700">
+            Motif du rejet
+          </Text>
+          <Text className="text-xs text-red-600 mt-0.5">
+            {pointage.rejectionReason}
+          </Text>
+        </View>
+      ) : null}
+
       <View className="flex-row items-center gap-4 mt-1">
         <View className="items-center">
           <Text className="text-[10px] text-gray-400">Début</Text>
@@ -67,7 +82,12 @@ export function PointageHistoriqueItem({
           <View className="flex-row items-center gap-1">
             <Clock size={11} color="#2563eb" />
             <Text className="text-sm font-bold text-primary">
-              {formatDuration(pointage.totalHours)}
+              {formatDurationMinutes(
+                pointage.totalMinutes ??
+                  (pointage.totalHours == null
+                    ? null
+                    : Math.round(pointage.totalHours * 60)),
+              )}
             </Text>
           </View>
         </View>

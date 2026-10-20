@@ -14,10 +14,16 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users      User[]
-  chantiers  Chantier[]
-  pointages  Pointage[]
-  depenses   Depense[]
+  users                  User[]
+  chantiers              Chantier[]
+  pointages              Pointage[]
+  depenses               Depense[]
+  tachesChantier         TacheChantier[]
+  repartitionsPointage   PointageTache[]
+  correctionsPaie        PaieCorrection[]
+  majorationsZones       ZoneMajoration[]
+  indemnites             Indemnite[]
+  affectationsIndemnites IndemniteAffectation[]
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
@@ -26,23 +32,40 @@ enum Role {
   ADMIN
   PATRON
   COMPTABLE
+  CONDUCTEUR
   OUVRIER
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  password     String
-  firstName    String
-  lastName     String
-  role         Role     @default(OUVRIER)
-  companyId    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  firstName      String
+  lastName       String
+  role           Role     @default(OUVRIER)
+  companyId      String
+  tauxHoraire    Float?
+  phone          String?
+  address        String?
+  numeroCv       String?
+  mutuelle       String?
+  contactUrgence String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  company   Company    @relation(fields: [companyId], references: [id])
-  pointages Pointage[]
-  chantiers Chantier[] @relation("UserAssignedChantiers")
+  company                    Company                     @relation(fields: [companyId], references: [id])
+  pointages                  Pointage[]
+  chantiers                  Chantier[]                  @relation("UserAssignedChantiers")
+  chantiersConduits          Chantier[]                  @relation("UserAssignedConducteurs")
+  depensesCreees             Depense[]                   @relation("DepensesCreees")
+  depensesControlees         Depense[]                   @relation("DepensesControlees")
+  historiqueControleDepenses DepenseControleHistorique[] @relation("HistoriqueControleDepenses")
+  correctionsPaieCible       PaieCorrection[]            @relation("CorrectionsPaieCible")
+  correctionsPaieCreees      PaieCorrection[]            @relation("CorrectionsPaieCreees")
+  correctionsPaieValidees    PaieCorrection[]            @relation("CorrectionsPaieValidees")
+  historiqueCorrectionsPaie  PaieCorrectionHistorique[]  @relation("HistoriqueCorrectionsPaie")
+  indemnitesAffectees        IndemniteAffectation[]      @relation("IndemnitesAffectees")
+  indemnitesAffecteesPar     IndemniteAffectation[]      @relation("IndemnitesAffecteesPar")
 }
 
 // ─── Chantier ─────────────────────────────────────────────────────────────────
@@ -55,21 +78,43 @@ enum ChantierStatus {
 }
 
 model Chantier {
-  id        String        @id @default(uuid())
-  name      String
-  address   String
-  status    ChantierStatus @default(EN_COURS)
-  budget    Float?
-  startDate DateTime
-  endDate   DateTime?
-  companyId String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id               String         @id @default(uuid())
+  name             String
+  address          String
+  client           String?
+  status           ChantierStatus @default(EN_COURS)
+  budget           Float? // Budget total prévisionnel = budgetMainOeuvre + budgetMateriaux, calculé côté API
+  budgetMainOeuvre Float? // BR-C-001 : budget prévisionnel main d'œuvre (interne + sous-traitance)
+  budgetMateriaux  Float? // BR-C-001 : budget prévisionnel matériaux
+  coefficient      Float          @default(1) // Coefficient appliqué au budget pour calculer le prix de vente
+  marge            Float? // Marge visée, saisie ou importée du devis (BR-C-003)
+  zoneCategorie    Int?
+  startDate        DateTime
+  endDate          DateTime?
+  companyId        String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  company   Company    @relation(fields: [companyId], references: [id])
-  pointages Pointage[]
-  depenses  Depense[]
-  ouvriers  User[] @relation("UserAssignedChantiers")
+  company     Company         @relation(fields: [companyId], references: [id])
+  pointages   Pointage[]
+  depenses    Depense[]
+  ouvriers    User[]          @relation("UserAssignedChantiers")
+  conducteurs User[]          @relation("UserAssignedConducteurs")
+  taches      TacheChantier[]
+}
+
+model ZoneMajoration {
+  id             String   @id @default(uuid())
+  companyId      String
+  zoneCategorie  Int
+  tauxMajoration Float
+  dateEffet      DateTime
+  createdAt      DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, zoneCategorie, dateEffet])
+  @@index([companyId, zoneCategorie, dateEffet])
 }
 
 // ─── Pointage ─────────────────────────────────────────────────────────────────
@@ -77,26 +122,33 @@ model Chantier {
 enum PointageStatus {
   EN_COURS
   TERMINE
+  SOUMIS
+  REJETE
   VALIDE
 }
 
 model Pointage {
-  id         String        @id @default(uuid())
-  userId     String
-  chantierId String
-  companyId  String
-  status     PointageStatus @default(EN_COURS)
-  startTime  DateTime
-  endTime    DateTime?
-  totalHours Float?
-  taches     String[]
-  comment    String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id              String         @id @default(uuid())
+  userId          String
+  chantierId      String
+  companyId       String
+  status          PointageStatus @default(EN_COURS)
+  startTime       DateTime
+  endTime         DateTime?
+  totalMinutes    Int? // Durée réelle canonique, en minutes
+  totalHours      Float?
+  taches          String[]
+  comment         String?
+  rejectionReason String?
+  correctedAt     DateTime?
+  correctedById   String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  user     User     @relation(fields: [userId], references: [id])
-  chantier Chantier @relation(fields: [chantierId], references: [id])
-  company  Company  @relation(fields: [companyId], references: [id])
+  user         User            @relation(fields: [userId], references: [id])
+  chantier     Chantier        @relation(fields: [chantierId], references: [id])
+  company      Company         @relation(fields: [companyId], references: [id])
+  repartitions PointageTache[]
 }
 
 // ─── Depense ──────────────────────────────────────────────────────────────────
@@ -104,21 +156,187 @@ model Pointage {
 enum DepenseCategorie {
   MATERIEL
   MAIN_OEUVRE
+  SOUS_TRAITANCE
   TRANSPORT
   AUTRE
 }
 
-model Depense {
-  id          String          @id @default(uuid())
-  chantierId  String
-  companyId   String
-  categorie   DepenseCategorie
-  montant     Float
-  description String
-  date        DateTime
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+enum DepenseStatutControle {
+  A_CONTROLER
+  ACCEPTEE
+  REJETEE
+}
 
-  chantier Chantier @relation(fields: [chantierId], references: [id])
-  company  Company  @relation(fields: [companyId], references: [id])
+model Depense {
+  id             String                @id @default(uuid())
+  chantierId     String
+  companyId      String
+  tacheId        String? // BR-C-010 : rattachement obligatoire pour une dépense manuelle (imposé côté DTO)
+  categorie      DepenseCategorie
+  montant        Float
+  description    String
+  date           DateTime
+  fournisseur    String?
+  statutControle DepenseStatutControle @default(A_CONTROLER)
+  motifRejet     String?
+  controleeAt    DateTime?
+  controleeParId String?
+  createdById    String?
+  idempotencyKey String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  chantier           Chantier                    @relation(fields: [chantierId], references: [id])
+  company            Company                     @relation(fields: [companyId], references: [id])
+  tache              TacheChantier?              @relation(fields: [tacheId], references: [id])
+  createdBy          User?                       @relation("DepensesCreees", fields: [createdById], references: [id])
+  controleePar       User?                       @relation("DepensesControlees", fields: [controleeParId], references: [id])
+  historiqueControle DepenseControleHistorique[]
+
+  @@unique([companyId, idempotencyKey])
+}
+
+model DepenseControleHistorique {
+  id        String                @id @default(uuid())
+  depenseId String
+  companyId String
+  statut    DepenseStatutControle
+  motif     String?
+  auteurId  String
+  createdAt DateTime              @default(now())
+
+  depense Depense @relation(fields: [depenseId], references: [id], onDelete: Cascade)
+  auteur  User    @relation("HistoriqueControleDepenses", fields: [auteurId], references: [id])
+
+  @@index([depenseId, createdAt])
+  @@index([companyId, createdAt])
+}
+
+enum PaieCorrectionStatut {
+  EN_ATTENTE
+  VALIDEE
+}
+
+enum PaieCorrectionAction {
+  CORRIGEE
+  VALIDEE
+}
+
+model PaieCorrection {
+  id                        String               @id @default(uuid())
+  companyId                 String
+  userId                    String
+  dateFrom                  DateTime
+  dateTo                    DateTime
+  heuresMajoreesCalculees   Float
+  heuresMajoreesCorrigees   Float?
+  nombreIndemnitesCalculees Int
+  nombreIndemnitesCorrigees Int?
+  motif                     String
+  statut                    PaieCorrectionStatut @default(EN_ATTENTE)
+  corrigeeParId             String
+  corrigeeAt                DateTime             @default(now())
+  valideeParId              String?
+  valideeAt                 DateTime?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+
+  company     Company                    @relation(fields: [companyId], references: [id])
+  user        User                       @relation("CorrectionsPaieCible", fields: [userId], references: [id])
+  corrigeePar User                       @relation("CorrectionsPaieCreees", fields: [corrigeeParId], references: [id])
+  valideePar  User?                      @relation("CorrectionsPaieValidees", fields: [valideeParId], references: [id])
+  historique  PaieCorrectionHistorique[]
+
+  @@unique([companyId, userId, dateFrom, dateTo])
+  @@index([companyId, dateFrom, dateTo])
+}
+
+model PaieCorrectionHistorique {
+  id             String               @id @default(uuid())
+  correctionId   String
+  companyId      String
+  action         PaieCorrectionAction
+  heuresMajorees Float?
+  indemnites     Int?
+  motif          String?
+  auteurId       String
+  createdAt      DateTime             @default(now())
+
+  correction PaieCorrection @relation(fields: [correctionId], references: [id], onDelete: Cascade)
+  auteur     User           @relation("HistoriqueCorrectionsPaie", fields: [auteurId], references: [id])
+
+  @@index([correctionId, createdAt])
+  @@index([companyId, createdAt])
+}
+
+model Indemnite {
+  id        String   @id @default(uuid())
+  companyId String
+  libelle   String
+  montant   Float?
+  regle     String?
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company      Company                @relation(fields: [companyId], references: [id])
+  affectations IndemniteAffectation[]
+
+  @@index([companyId, actif])
+}
+
+model IndemniteAffectation {
+  id          String   @id @default(uuid())
+  companyId   String
+  indemniteId String
+  userId      String
+  createdById String
+  dateFrom    DateTime
+  dateTo      DateTime
+  quantite    Float    @default(1)
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company   @relation(fields: [companyId], references: [id])
+  indemnite Indemnite @relation(fields: [indemniteId], references: [id], onDelete: Cascade)
+  user      User      @relation("IndemnitesAffectees", fields: [userId], references: [id])
+  createdBy User      @relation("IndemnitesAffecteesPar", fields: [createdById], references: [id])
+
+  @@unique([companyId, indemniteId, userId, dateFrom, dateTo])
+  @@index([companyId, userId, dateFrom, dateTo])
+}
+
+// ─── TacheChantier ────────────────────────────────────────────────────────────
+
+model TacheChantier {
+  id               String   @id @default(uuid())
+  chantierId       String
+  companyId        String
+  libelle          String
+  prixVenduHT      Float?
+  budgetMainOeuvre Float? // BR-C-005 : budget prévisionnel main d'œuvre de la tâche
+  budgetMateriaux  Float? // BR-C-005 : budget prévisionnel matériaux de la tâche
+  createdAt        DateTime @default(now())
+
+  chantier     Chantier        @relation(fields: [chantierId], references: [id], onDelete: Cascade)
+  company      Company         @relation(fields: [companyId], references: [id])
+  depenses     Depense[]
+  repartitions PointageTache[]
+}
+
+model PointageTache {
+  id         String   @id @default(uuid())
+  pointageId String
+  tacheId    String
+  companyId  String
+  minutes    Int
+  createdAt  DateTime @default(now())
+
+  pointage Pointage      @relation(fields: [pointageId], references: [id], onDelete: Cascade)
+  tache    TacheChantier @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  company  Company       @relation(fields: [companyId], references: [id])
+
+  @@unique([pointageId, tacheId])
+  @@index([companyId, tacheId])
 }

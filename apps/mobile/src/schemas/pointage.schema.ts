@@ -7,10 +7,12 @@ export const PointageSchema = z.object({
   chantierId: z.string(),
   status: z.enum(POINTAGE_STATUSES),
   startTime: z.string(),
-  endTime: z.string().optional(),
-  totalHours: z.number().nullable().optional(),
+  endTime: z.string().nullish(),
+  totalMinutes: z.number().int().nullish(),
+  totalHours: z.number().nullish(),
   taches: z.array(z.string()).optional(),
-  comment: z.string().optional(),
+  comment: z.string().nullish(),
+  rejectionReason: z.string().nullish(),
   chantier: z
     .object({
       id: z.string(),

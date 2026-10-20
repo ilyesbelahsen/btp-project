@@ -1,6 +1,9 @@
 export const COLORS = {
-  primary: "#2563eb",
-  primaryLight: "#eff6ff",
+  primary: "#ea580c",
+  primaryLight: "#fff7ed",
+  primaryDark: "#c2410c",
+  brand: "#1c1917",
+  brandMuted: "#292524",
   success: "#16a34a",
   successLight: "#dcfce7",
   danger: "#dc2626",
@@ -25,5 +28,7 @@ export const COLORS = {
 export const STATUS_CONFIG = {
   EN_COURS: { label: "En cours", color: COLORS.primary },
   TERMINE: { label: "Terminé", color: COLORS.success },
+  SOUMIS: { label: "Soumis", color: COLORS.warning },
+  REJETE: { label: "Rejeté", color: COLORS.danger },
   VALIDE: { label: "Validé", color: COLORS.purple },
 } as const;

@@ -2,20 +2,25 @@
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#2563eb",
-          light: "#eff6ff",
-          dark: "#1d4ed8",
+          DEFAULT: "#ea580c",
+          light: "#fff7ed",
+          dark: "#c2410c",
+        },
+        brand: {
+          DEFAULT: "#1c1917",
+          muted: "#292524",
         },
         success: {
-          DEFAULT: "#16a34a",
+          DEFAULT: "#166534",
           light: "#dcfce7",
         },
         danger: {
-          DEFAULT: "#dc2626",
+          DEFAULT: "#991b1b",
           light: "#fee2e2",
         },
         warning: {

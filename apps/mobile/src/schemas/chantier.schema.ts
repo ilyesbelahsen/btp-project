@@ -11,3 +11,13 @@ export const ChantierSchema = z.object({
 });
 
 export const ChantierListSchema = z.array(ChantierSchema);
+
+export const TacheChantierSchema = z.object({
+  id: z.string(),
+  libelle: z.string(),
+  prixVenduHT: z.number().nullable(),
+  budgetMainOeuvre: z.number().nullable(),
+  budgetMateriaux: z.number().nullable(),
+});
+
+export const TacheChantierListSchema = z.array(TacheChantierSchema);

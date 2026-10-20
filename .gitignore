@@ -4,8 +4,6 @@ node_modules/
 
 # Build outputs
 apps/api/dist/
-apps/desktop/dist-electron/
-apps/desktop/dist-renderer/
 apps/mobile/.expo/
 apps/mobile/dist/
 
@@ -30,5 +28,3 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Electron builder output
-apps/desktop/release/

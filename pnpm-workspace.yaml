@@ -9,6 +9,7 @@ allowBuilds:
   bcrypt: true
   electron-winstaller: false
   prisma: true
+  tesseract.js: false
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - "@expo/cli@57.0.4"

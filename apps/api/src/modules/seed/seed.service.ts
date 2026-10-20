@@ -15,7 +15,8 @@ export class SeedService implements OnApplicationBootstrap {
   private async seed() {
     const existing = await this.prisma.company.findFirst();
     if (existing) {
-      this.logger.log('Base de données déjà initialisée — seed ignoré');
+      await this.ensureConducteur(existing.id);
+      this.logger.log('Base de données déjà initialisée — conducteur vérifié');
       return;
     }
 
@@ -31,7 +32,7 @@ export class SeedService implements OnApplicationBootstrap {
     });
 
     // ── Users ─────────────────────────────────────────────────────────────────
-    const [, , ouvrier1, ouvrier2, ouvrier3] = await Promise.all([
+    const [, , conducteur, ouvrier1, ouvrier2, ouvrier3] = await Promise.all([
       this.prisma.user.create({
         data: {
           email: 'patron@btp.fr',
@@ -49,6 +50,16 @@ export class SeedService implements OnApplicationBootstrap {
           firstName: 'Marie',
           lastName: 'Martin',
           role: 'COMPTABLE',
+          companyId: company.id,
+        },
+      }),
+      this.prisma.user.create({
+        data: {
+          email: 'conducteur@btp.fr',
+          password: hash,
+          firstName: 'Paul',
+          lastName: 'Rousseau',
+          role: 'CONDUCTEUR',
           companyId: company.id,
         },
       }),
@@ -92,7 +103,10 @@ export class SeedService implements OnApplicationBootstrap {
           name: 'Résidence Les Cèdres',
           address: '12 rue des Cèdres, 75001 Paris',
           status: 'EN_COURS',
-          budget: 450_000,
+          budget: 390_000,
+          budgetMainOeuvre: 210_000,
+          budgetMateriaux: 180_000,
+          marge: 60_000,
           startDate: new Date('2026-03-01'),
           companyId: company.id,
         },
@@ -102,7 +116,10 @@ export class SeedService implements OnApplicationBootstrap {
           name: 'Centre Commercial Lumière',
           address: '45 avenue Lumière, 69003 Lyon',
           status: 'EN_COURS',
-          budget: 1_200_000,
+          budget: 1_040_000,
+          budgetMainOeuvre: 560_000,
+          budgetMateriaux: 480_000,
+          marge: 160_000,
           startDate: new Date('2026-01-15'),
           companyId: company.id,
         },
@@ -112,11 +129,25 @@ export class SeedService implements OnApplicationBootstrap {
           name: 'École Primaire Voltaire',
           address: '8 rue Voltaire, 31000 Toulouse',
           status: 'TERMINE',
-          budget: 280_000,
+          budget: 245_000,
+          budgetMainOeuvre: 130_000,
+          budgetMateriaux: 115_000,
+          marge: 35_000,
           startDate: new Date('2025-09-01'),
           endDate: new Date('2026-06-30'),
           companyId: company.id,
         },
+      }),
+    ]);
+
+    await Promise.all([
+      this.prisma.chantier.update({
+        where: { id: chantier1.id },
+        data: { conducteurs: { connect: { id: conducteur.id } } },
+      }),
+      this.prisma.chantier.update({
+        where: { id: chantier2.id },
+        data: { conducteurs: { connect: { id: conducteur.id } } },
       }),
     ]);
 
@@ -223,7 +254,7 @@ export class SeedService implements OnApplicationBootstrap {
         data: {
           chantierId: chantier2.id,
           companyId: company.id,
-          categorie: 'MAIN_OEUVRE',
+          categorie: 'SOUS_TRAITANCE',
           montant: 12_000,
           description: 'Sous-traitant électricité',
           date: new Date('2026-02-20'),
@@ -246,9 +277,46 @@ export class SeedService implements OnApplicationBootstrap {
     this.logger.log('  Comptes de démonstration (mot de passe : Password123!)');
     this.logger.log('  PATRON     → patron@btp.fr');
     this.logger.log('  COMPTABLE  → comptable@btp.fr');
+    this.logger.log('  CONDUCTEUR → conducteur@btp.fr');
     this.logger.log('  OUVRIER 1  → ouvrier1@btp.fr');
     this.logger.log('  OUVRIER 2  → ouvrier2@btp.fr');
     this.logger.log('  OUVRIER 3  → ouvrier3@btp.fr');
     this.logger.log('─────────────────────────────────────────');
+  }
+
+  private async ensureConducteur(companyId: string) {
+    const password = await bcrypt.hash('Password123!', 10);
+    const conducteur = await this.prisma.user.upsert({
+      where: { email: 'conducteur@btp.fr' },
+      create: {
+        email: 'conducteur@btp.fr',
+        password,
+        firstName: 'Paul',
+        lastName: 'Rousseau',
+        role: 'CONDUCTEUR',
+        companyId,
+      },
+      update: {
+        password,
+        role: 'CONDUCTEUR',
+        companyId,
+      },
+    });
+
+    const chantiers = await this.prisma.chantier.findMany({
+      where: { companyId, status: 'EN_COURS' },
+      select: { id: true },
+    });
+
+    await Promise.all(
+      chantiers.map((chantier) =>
+        this.prisma.chantier.update({
+          where: { id: chantier.id },
+          data: { conducteurs: { connect: { id: conducteur.id } } },
+        }),
+      ),
+    );
+
+    this.logger.log('  CONDUCTEUR → conducteur@btp.fr');
   }
 }

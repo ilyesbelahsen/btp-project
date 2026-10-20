@@ -1,0 +1,11 @@
+
+> web@0.1.0 typecheck
+> tsc --noEmit
+
+src/features/auth/components/LoginForm.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/chantier/components/AddTacheForm.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/chantier/components/CreateChantierForm.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/chantier/components/EditChantierPage.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/chantier/components/TacheEditForm.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/depense/components/CreateDepenseForm.tsx(4,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/features/ouvriers/components/CreateOuvrierPage.tsx(5,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.

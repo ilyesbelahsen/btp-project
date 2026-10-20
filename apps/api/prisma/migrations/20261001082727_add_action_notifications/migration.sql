@@ -1,0 +1,2 @@
+-- Historical migration already recorded as applied in the database.
+-- The original SQL is unavailable and no current schema object depends on it.

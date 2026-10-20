@@ -8,6 +8,7 @@ import type {
   HistoriquePage,
   Pointage,
   PointageStats,
+  RepartitionTache,
 } from "@/src/types/pointage.type";
 
 export const pointageService = {
@@ -15,11 +16,6 @@ export const pointageService = {
     const response = await api.get("/pointages/aujourd-hui");
     if (!response.data) return null;
     return PointageSchema.parse(response.data);
-  },
-
-  getTypesTaches: async (): Promise<string[]> => {
-    const response = await api.get("/pointages/types-taches");
-    return response.data as string[];
   },
 
   getHistorique: async (params?: {
@@ -48,8 +44,24 @@ export const pointageService = {
     return PointageSchema.parse(response.data);
   },
 
+  cancel: async (id: string): Promise<void> => {
+    await api.delete(`/pointages/${id}`);
+  },
+
+  submit: async (id: string, comment: string): Promise<Pointage> => {
+    const response = await api.patch(`/pointages/${id}/soumettre`, { comment });
+    return PointageSchema.parse(response.data);
+  },
+
   saveTaches: async (id: string, taches: string[]): Promise<void> => {
     await api.post(`/pointages/${id}/taches`, { taches });
+  },
+
+  saveRepartition: async (
+    id: string,
+    repartitions: RepartitionTache[],
+  ): Promise<void> => {
+    await api.post(`/pointages/${id}/repartition`, { repartitions });
   },
 
   updateComment: async (id: string, comment: string): Promise<void> => {

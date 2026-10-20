@@ -11,6 +11,10 @@ import { ChantierModule } from './modules/chantier/chantier.module';
 import { PointageModule } from './modules/pointage/pointage.module';
 import { DepenseModule } from './modules/depense/depense.module';
 import { SeedModule } from './modules/seed/seed.module';
+import { RapportModule } from './modules/rapport/rapport.module';
+import { TacheChantierModule } from './modules/tache-chantier/tache-chantier.module';
+import { PaieModule } from './modules/paie/paie.module';
+import { ZoneModule } from './modules/zone/zone.module';
 
 @Module({
   imports: [
@@ -24,6 +28,10 @@ import { SeedModule } from './modules/seed/seed.module';
     PointageModule,
     DepenseModule,
     SeedModule,
+    RapportModule,
+    TacheChantierModule,
+    PaieModule,
+    ZoneModule,
   ],
   controllers: [AppController],
   providers: [AppService],

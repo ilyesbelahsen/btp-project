@@ -8,13 +8,14 @@ type ButtonProps = TouchableOpacityProps & {
   variant?: ButtonVariant;
   loading?: boolean;
   icon?: React.ReactNode;
+  className?: string;
 };
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     "bg-primary rounded-lg py-3.5 px-4 items-center flex-row justify-center",
   danger:
-    "bg-red-500 rounded-lg py-2.5 px-4 flex-row items-center justify-center gap-1.5",
+    "bg-danger rounded-lg py-2.5 px-4 flex-row items-center justify-center gap-1.5",
   ghost: "bg-white border border-gray-200 rounded-lg py-3.5 px-4 items-center",
 };
 
@@ -30,15 +31,16 @@ export function Button({
   loading = false,
   icon,
   disabled,
+  className,
   ...props
 }: ButtonProps) {
   return (
     <TouchableOpacity
-      className={`${VARIANT_CLASSES[variant]} ${disabled || loading ? "opacity-60" : ""}`}
+      {...props}
+      className={`${VARIANT_CLASSES[variant]} ${disabled || loading ? "opacity-60" : ""} ${className ?? ""}`.trim()}
       disabled={disabled || loading}
       accessibilityRole="button"
       accessibilityLabel={label}
-      {...props}
     >
       {loading ? (
         <ActivityIndicator color="#fff" />

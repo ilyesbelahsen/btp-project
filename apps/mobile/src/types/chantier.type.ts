@@ -14,3 +14,11 @@ export type Chantier = {
   companyId: string;
   startDate: string;
 };
+
+export type TacheChantier = {
+  id: string;
+  libelle: string;
+  prixVenduHT: number | null;
+  budgetMainOeuvre: number | null;
+  budgetMateriaux: number | null;
+};

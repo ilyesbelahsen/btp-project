@@ -59,7 +59,7 @@ export function ChantierSyntheseRow({
         config.borderClass,
       )}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
             {config.icon}
@@ -74,9 +74,9 @@ export function ChantierSyntheseRow({
             )}
           </div>
           <div className="mt-2">
-            <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+            <div className="mb-1 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:gap-3">
               <span>Coût réel : {formatEur(chantier.coutTotal)}</span>
-              <span className="text-right">
+              <span className="sm:text-right">
                 Prix de vente HT : {formatEur(chantier.prixVenteHT)}
               </span>
             </div>
@@ -95,7 +95,7 @@ export function ChantierSyntheseRow({
             </div>
           </div>
         </div>
-        <div className="shrink-0 text-right">
+        <div className="shrink-0 text-left sm:text-right">
           <p
             className={cn("text-lg font-bold tabular-nums", config.margeClass)}
           >

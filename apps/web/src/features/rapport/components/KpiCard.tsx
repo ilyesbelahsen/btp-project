@@ -30,7 +30,7 @@ export function KpiCard({
         <div className="space-y-1">
           <p
             className={cn(
-              "text-2xl font-semibold tracking-tight tabular-nums",
+              "break-words text-xl font-semibold tracking-tight tabular-nums sm:text-2xl",
               trend === "positive" && "text-emerald-700",
               trend === "negative" && "text-red-700",
               trend === "neutral" && "text-stone-950",

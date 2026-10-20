@@ -61,7 +61,7 @@ export function AddTacheForm({ chantierId }: AddTacheFormProps) {
             </p>
           )}
         </div>
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <Label htmlFor="new-prix" className="sr-only">
             Prix HT
           </Label>
@@ -80,7 +80,7 @@ export function AddTacheForm({ chantierId }: AddTacheFormProps) {
             </p>
           )}
         </div>
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <Label htmlFor="new-budget-mo" className="sr-only">
             Budget main d&apos;œuvre
           </Label>
@@ -99,7 +99,7 @@ export function AddTacheForm({ chantierId }: AddTacheFormProps) {
             </p>
           )}
         </div>
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <Label htmlFor="new-budget-materiaux" className="sr-only">
             Budget matériaux
           </Label>

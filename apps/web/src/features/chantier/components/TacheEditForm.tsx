@@ -65,7 +65,7 @@ export function TacheEditForm({
         </div>
         {(["prixVenduHT", "budgetMainOeuvre", "budgetMateriaux"] as const).map(
           (field) => (
-            <div key={field} className="w-36">
+            <div key={field} className="w-full sm:w-36">
               <Input
                 {...register(field)}
                 type="number"
